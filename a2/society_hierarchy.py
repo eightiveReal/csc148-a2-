@@ -400,6 +400,20 @@ class Citizen:
     ###########################################################################
     # TODO Task 2.2
     ###########################################################################
+    def _get_district(self) -> Optional[DistrictLeader]:
+        """Return the iimediate district leader
+
+        Return None if the Citizen is not part of any districts.
+
+        """
+        if self.get_superior() is None:
+            return None
+        elif isinstance(self.get_superior(), DistrictLeader):
+            return self.get_superior()
+        else:
+            superior = self.get_superior()
+            return superior._get_district()
+
     def get_district_name(self) -> str:
         """Return the immediate district that the Citizen belongs to (or
         leads).
@@ -415,7 +429,12 @@ class Citizen:
         >>> c1.get_district_name()
         'District A'
         """
-        # Note: This method must call itself recursively
+        # Note: This method must call itself recursively --> helper is
+        # recursive,good?
+        if self._get_district() is None:
+            return ""
+        else:
+            return self._get_district().get_district_name()
 
     def rename_district(self, district_name: str) -> None:
         """Rename the immediate district which this Citizen is a part of to
@@ -434,6 +453,9 @@ class Citizen:
         'District B'
         """
         # Note: This method must call itself recursively
+        # same applies, helper method is recursive, good?
+        if not self._get_district() is None:
+            self._get_district().rename_district(district_name)
 
     ###########################################################################
     # TODO Task 3.2 Helper Method
@@ -621,6 +643,16 @@ class Society:
     ###########################################################################
     # TODO Task 2.3
     ###########################################################################
+    # def _remove(self, cid: int) -> None:
+    #     """ remove Citizen correspoding to the given id from the subordinate
+    #
+    #     If the given Citizen is not in the subordinate, then do nothing
+    #
+    #     """
+    #     if not self.get_citizen(cid) is None:
+    #
+    # if neccessary in later will build this
+
     def change_citizen_type(self, cid: int,
                             district_name: Optional[str] = None) -> Citizen:
         """Change the type of the Citizen with the given <cid>
@@ -644,6 +676,28 @@ class Society:
         Precondition:
         - If <cid> is the id of a DistrictLeader, <district_name> must be None
         """
+        person = self.get_citizen(cid)
+        sup = person.get_superior()
+        if isinstance(person, Citizen):
+            # add new leader
+            new_leader = DistrictLeader(person.cid, person.manufacturer,
+                                        person.model_year,
+                                        person.job, person.rating,
+                                        district_name)
+            new_leader.become_subordinate_to(sup)
+            # delete past citizen
+
+            # public issue here
+            sup._subordinates.remove(person)
+            return new_leader
+        elif isinstance(person, DistrictLeader):
+            # add new citizen
+            new_p = Citizen(person.cid, person.manufacturer, person.model_year,
+                            person.job, person.rating)
+            new_p.become_subordinate_to(sup)
+
+            # delete leader
+            sup._subordinates.remove(person)
 
     ###########################################################################
     # TODO Task 3.1
@@ -775,6 +829,7 @@ class DistrictLeader(Citizen):
     def rename_district(self, district_name: str) -> None:
         """Rename this district leader's district to the given <district_name>.
         """
+        self._district_name = district_name
 
 
 ###########################################################################
