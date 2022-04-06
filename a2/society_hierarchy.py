@@ -323,7 +323,7 @@ class Citizen:
         else:
             all_citizen = []
             for p in self._subordinates:
-                all_citizen.append(p)
+                all_citizen = merge(all_citizen, [p])
                 all_citizen = merge(all_citizen, p.get_all_subordinates())
             return all_citizen
 
@@ -552,6 +552,8 @@ class Society:
         True
         """
 
+        return merge(self._head.get_all_subordinates(), [self._head])
+
     def add_citizen(self, citizen: Citizen, superior_id: int = None) -> None:
         """Add <citizen> to this Society as a subordinate of the Citizen with
         ID <superior_id>.
@@ -607,6 +609,14 @@ class Society:
         >>> o.get_citizens_with_job('Manager') == [c1, c2, c4]
         True
         """
+
+        all_citizens = self.get_all_citizens()
+        filtered = []
+        for p in all_citizens:
+            if p.job == job:
+                filtered.append(p)
+
+        return filtered
 
     ###########################################################################
     # TODO Task 2.3
@@ -733,6 +743,8 @@ class DistrictLeader(Citizen):
         >>> c2.get_district_name()
         'District A'
         """
+        Citizen.__init__(self, cid, manufacturer, model_year, job, rating)
+        self._district_name = district
 
     def get_district_citizens(self) -> List[Citizen]:
         """Return a list of all citizens in this DistrictLeader's district, in
@@ -750,6 +762,7 @@ class DistrictLeader(Citizen):
         >>> c1.get_district_citizens() == [c1, c2, c3]
         True
         """
+        return merge(self.get_all_subordinates(), [self])
 
     ###########################################################################
     # TODO Task 2.2
@@ -757,6 +770,7 @@ class DistrictLeader(Citizen):
     def get_district_name(self) -> str:
         """Return the name of the district that this DistrictLeader leads.
         """
+        return self._district_name
 
     def rename_district(self, district_name: str) -> None:
         """Rename this district leader's district to the given <district_name>.
